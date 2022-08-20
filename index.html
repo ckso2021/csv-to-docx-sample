@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <script src="docx-7.4.1.min.js"></script>
+    <script src="FileSaver-2.0.4.min.js"></script>
+    <script src="jquery-3.6.0.min.js"></script>
+</head>
+
+<body>
+
+    <h1>DOCX browser Word document generation</h1>
+
+    <input type="file" id="fileinput" onchange='handleFileSelect(this);' />
+
+
+    <button type="button" onclick="generate()">Click to generate document</button>
+
+    <script>
+        var fr = new FileReader();
+        var file;
+        var txt;
+
+        function receivedText() {
+            console.clear();
+            console.log(fr.result);
+            console.log('=========' + new Date().toLocaleString() + '==========');
+            if (fr.result.includes('�')) {
+                fr.readAsText(file, 'big5');
+                return;
+            }
+            txt = fr.result;
+            //   const blob = new Blob(fr.result, { type: 'text/csv;charset=utf-8;' });
+            //    console.log(blob.text);
+            //    console.log('wwwww: ' + String.fromCharCode(fr.result));
+            //    document.getElementById('editor').appendChild(document.createTextNode(fr.result));
+        }
+
+        function handleFileSelect(ele) {
+            file = $(ele).prop('files')[0];
+            fr.onloadend = receivedText;
+            fr.readAsText(file);
+            // fr.readAsBinaryString(file); //as bit work with base64 for example upload to server
+            //  fr.readAsDataURL(file);
+        }
+
+        function generate() {
+            // const doc = new docx.Document({
+            //     sections: [{
+            //         properties: {},
+            //         children: [
+            //             new docx.Paragraph({
+            //                 children: [
+            //                     new docx.TextRun("Hello World"),
+            //                     new docx.TextRun({
+            //                         text: "Foo Bar中文繁體測試",
+            //                         bold: true,
+            //                     }),
+            //                     new docx.TextRun({
+            //                         text: "\tGithub is the best",
+            //                         bold: true,
+            //                     }),
+            //                     new docx.TextRun({
+            //                         text: "\r\nGithub is the best",
+            //                         bold: true,
+            //                     }),
+            //                 ],
+            //             }),
+            //         ],
+            //     }]
+            // });
+            const table = new docx.Table({
+                columnWidths: [3505, 5505],
+                rows: [
+                    new docx.TableRow({
+                        children: [
+                            new docx.TableCell({
+                                width: {
+                                    size: 3505,
+                                    type: docx.WidthType.DXA,
+                                },
+                                children: [new docx.Paragraph(txt)],
+                            }),
+                            new docx.TableCell({
+                                width: {
+                                    size: 5505,
+                                    type: docx.WidthType.DXA,
+                                },
+                                children: [],
+                            }),
+                        ],
+                    }),
+                    new docx.TableRow({
+                        children: [
+                            new docx.TableCell({
+                                width: {
+                                    size: 3505,
+                                    type: docx.WidthType.DXA,
+                                },
+                                children: [],
+                            }),
+                            new docx.TableCell({
+                                width: {
+                                    size: 5505,
+                                    type: docx.WidthType.DXA,
+                                },
+                                children: [new docx.Paragraph("World")],
+                            }),
+                        ],
+                    }),
+                ],
+            });
+
+            const table2 = new docx.Table({
+                columnWidths: [4505, 4505],
+                rows: [
+                    new docx.TableRow({
+                        children: [
+                            new docx.TableCell({
+                                width: {
+                                    size: 4505,
+                                    type: docx.WidthType.DXA,
+                                },
+                                children: [new docx.Paragraph("Hello")],
+                            }),
+                            new docx.TableCell({
+                                width: {
+                                    size: 4505,
+                                    type: docx.WidthType.DXA,
+                                },
+                                children: [],
+                            }),
+                        ],
+                    }),
+                    new docx.TableRow({
+                        children: [
+                            new docx.TableCell({
+                                width: {
+                                    size: 4505,
+                                    type: docx.WidthType.DXA,
+                                },
+                                children: [],
+                            }),
+                            new docx.TableCell({
+                                width: {
+                                    size: 4505,
+                                    type: docx.WidthType.DXA,
+                                },
+                                children: [new docx.Paragraph("World")],
+                            }),
+                        ],
+                    }),
+                ],
+            });
+
+            const table3 = new docx.Table({
+                rows: [
+                    new docx.TableRow({
+                        children: [
+                            new docx.TableCell({
+                                children: [new docx.Paragraph("Hello")],
+                            }),
+                            new docx.TableCell({
+                                children: [],
+                            }),
+                        ],
+                    }),
+                    new docx.TableRow({
+                        children: [
+                            new docx.TableCell({
+                                children: [],
+                            }),
+                            new docx.TableCell({
+                                children: [new docx.Paragraph("World")],
+                            }),
+                        ],
+                    }),
+                ],
+            });
+
+            const doc = new docx.Document({
+                sections: [
+                    {
+                        properties: {
+                            page: {
+                                size: {
+                                    orientation: docx.PageOrientation.LANDSCAPE,
+                                    height: docx.convertMillimetersToTwip(210),
+                                    width: docx.convertMillimetersToTwip(148),
+                                },
+                                margin: {
+                                    top: 700,
+                                    right: 700,
+                                    bottom: 700,
+                                    left: 700,
+                                },
+                            },
+                        },
+                        children: [
+                            new docx.Paragraph({ text: "Table with skewed widths" }),
+                            table,
+                            new docx.Paragraph({ text: "Table with equal widths" }),
+                            table2,
+                            new docx.Paragraph({ text: "Table without setting widths" }),
+                            table3,
+                        ],
+                    },
+                ],
+            });
+
+            docx.Packer.toBlob(doc).then(blob => {
+                console.log(blob);
+                saveAs(blob, "example.docx");
+                console.log("Document created successfully");
+            });
+        }
+
+    </script>
+
+</body>
+
+</html>
